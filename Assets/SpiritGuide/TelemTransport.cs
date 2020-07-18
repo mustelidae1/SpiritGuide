@@ -161,7 +161,7 @@ class TransportUdp
 
     //*********************************************************************
     /// <summary>
-    /// Send string over the socket
+    /// Send message over the socket
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
