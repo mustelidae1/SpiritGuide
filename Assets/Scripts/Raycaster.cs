@@ -16,9 +16,10 @@ public class Raycaster : MonoBehaviour
     private float[] distances; // array updated with distances to spatial mesh 
     private Vector3[] directions; 
 
-    public TextMeshProUGUI debugText;
+    // we will send them as euler angles 
 
     public int maxDistance;
+    public TextMeshProUGUI debugText;
 
     private float increment; // angle between each aycast 
 
@@ -27,7 +28,6 @@ public class Raycaster : MonoBehaviour
         distances = new float[numRaycasts];
         directions = new Vector3[numRaycasts]; 
         increment = 360f / numRaycasts;
-
         float currentAngle = 0; 
         for (int i = 0; i < numRaycasts; i++)
         {
@@ -44,18 +44,25 @@ public class Raycaster : MonoBehaviour
         {
             
             Quaternion headRotation = transform.rotation; // raw rotation of the user's head 
-            Quaternion headRotationYOnly = Quaternion.Euler(0, headRotation.eulerAngles.y, 0);  // rotation of the user's head with only y euler angles
+            Quaternion headRotationYOnly = Quaternion.Euler(0, headRotation.eulerAngles.y, 0);  // rotation of the user's head with only y euler angles                                                                                       
             Vector3 raycastRotation = headRotationYOnly * directions[i]; // Vector3 with correct angle from user's head for raycast 
 
             Debug.DrawLine(transform.position, raycastRotation * maxDistance, i == 0 ? Color.red : Color.blue);
             if (Physics.Raycast(transform.position, raycastRotation, out hit, maxDistance, layer_mask))
             {
-                //debugText.text = "HIT " + hit.distance;
+                if (i == 0)
+                {
+                    debugText.text = "" + System.Math.Round(hit.distance, 2) + "m";
+                }
+
                 distances[i] = hit.distance; 
             }
             else
             {
-                //debugText.text = "NO HIT";
+                if (i == 0)
+                {
+                    debugText.text = "CLEAR";
+                }
                 distances[i] = -1; 
             }         
         }
