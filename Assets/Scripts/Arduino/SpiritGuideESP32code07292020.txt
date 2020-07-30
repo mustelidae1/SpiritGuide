@@ -1,0 +1,527 @@
+/*
+ WiFi Web Server LED Blink
+
+ A simple web server that lets you blink an LED via the web.
+ This sketch will print the IP address of your WiFi Shield (once connected)
+ to the Serial monitor. From there, you can open that address in a web browser
+ to turn on and off the LED on pin 5.
+
+ If the IP address of your shield is yourAddress:
+ http://yourAddress/H turns the LED on
+ http://yourAddress/L turns it off
+
+ This example is written for a network using WPA encryption. For
+ WEP or WPA, change the Wifi.begin() call accordingly.
+
+ Circuit:
+ * WiFi shield attached
+ * LED attached to pin 5
+
+ created for arduino 25 Nov 2012
+ by Tom Igoe
+
+ported for sparkfun esp32 
+31.01.2017 by Jan Hendrik Berlin
+ 
+ */
+
+#include <WiFi.h>
+
+const char* ssid     = "AAA";
+const char* password = "aaa";
+
+WiFiServer server(80);
+
+void setup()
+{
+    Serial.begin(115200);
+    pinMode(2, OUTPUT);      // set the Far Right pin mode
+    pinMode(5, OUTPUT);      // set the Near Right pin mode
+    pinMode(23, OUTPUT);      // set the Near Left pin mode
+    pinMode(22, OUTPUT);      // set the Far Left pin mode
+    pinMode(15, OUTPUT);      // set the Buzzer pin mode
+
+
+    delay(10);
+
+    // We start by connecting to a WiFi network
+
+    Serial.println();
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+
+    Serial.println("");
+    Serial.println("WiFi connected.");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+    
+    server.begin();
+
+}
+
+int value = 0;
+
+void loop(){
+ WiFiClient client = server.available();   // listen for incoming clients
+
+  if (client) {                             // if you get a client,
+    Serial.println("New Client.");           // print a message out the serial port
+    String currentLine = "";                // make a String to hold incoming data from the client
+    while (client.connected()) {            // loop while the client's connected
+      if (client.available()) {             // if there's bytes to read from the client,
+        char c = client.read();             // read a byte, then
+        Serial.write(c);                    // print it out the serial monitor
+        if (c == '\n') {                    // if the byte is a newline character
+
+          // if the current line is blank, you got two newline characters in a row.
+          // that's the end of the client HTTP request, so send a response:
+          if (currentLine.length() == 0) {
+            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
+            // and a content-type so the client knows what's coming, then a blank line:
+            client.println("HTTP/1.1 200 OK");
+            client.println("Content-type:text/html");
+            client.println();
+
+            // the content of the HTTP response follows the header:
+            client.print("Click <a href=\"/Z\">here</a> to reset all outputs off.<br>");
+            client.print("Click <a href=\"/A\">here</a> to turn the Far Right on pin 2 on/off really slow.<br>");
+            client.print("Click <a href=\"/B\">here</a> to turn the Far Right on pin 2 on/off slow.<br>");
+            client.print("Click <a href=\"/C\">here</a> to turn the Far Right on pin 2 on/off faster.<br>");
+            client.print("Click <a href=\"/D\">here</a> to turn the Far Right on pin 2 on/off even faster.<br>");
+            client.print("Click <a href=\"/E\">here</a> to turn the Far Right on pin 2 on/off extremely faster.<br>");
+            client.print("Click <a href=\"/F\">here</a> to turn the Near Right on pin 5 on/off really slow.<br>");
+            client.print("Click <a href=\"/G\">here</a> to turn the Near Right on pin 5 on/off slow.<br>");
+            client.print("Click <a href=\"/H\">here</a> to turn the Near Right on pin 5 on/off faster.<br>");
+            client.print("Click <a href=\"/I\">here</a> to turn the Near Right on pin 5 on/off even faster.<br>");
+            client.print("Click <a href=\"/J\">here</a> to turn the Near Right on pin 5 on/off extremely faster.<br>");
+            client.print("Click <a href=\"/K\">here</a> to turn the Near Left on pin 23 on/off really slow.<br>");
+            client.print("Click <a href=\"/L\">here</a> to turn the Near Left on pin 23 on/off slow.<br>");
+            client.print("Click <a href=\"/M\">here</a> to turn the Near Left on pin 23 on/off faster.<br>");
+            client.print("Click <a href=\"/N\">here</a> to turn the Near Left on pin 23 on/off even faster.<br>");
+            client.print("Click <a href=\"/O\">here</a> to turn the Near Left on pin 23 on/off extremely faster.<br>");
+            client.print("Click <a href=\"/P\">here</a> to turn the Far Left on pin 22 on/off really slow.<br>");
+            client.print("Click <a href=\"/Q\">here</a> to turn the Far Left on pin 22 on/off slow.<br>");
+            client.print("Click <a href=\"/R\">here</a> to turn the Far Left on pin 22 on/off faster.<br>");
+            client.print("Click <a href=\"/S\">here</a> to turn the Far Left on pin 22 on/off even faster.<br>");
+            client.print("Click <a href=\"/T\">here</a> to turn the Far Left on pin 22 on/off extremely faster.<br>");
+
+            // The HTTP response ends with another blank line:
+            client.println();
+            // break out of the while loop:
+            break;
+          } else {    // if you got a newline, then clear currentLine:
+            currentLine = "";
+          }
+        } else if (c != '\r') {  // if you got anything else but a carriage return character,
+          currentLine += c;      // add it to the end of the currentLine
+        }
+
+        // Check to see if the client request was "GET /A" or "GET /Z":
+        if (currentLine.endsWith("GET /Z")) {
+          digitalWrite(2, LOW);                // GET /Z turns all the outputs off
+          digitalWrite(5, LOW);                // GET /Z turns all the outputs off
+          digitalWrite(23, LOW);               // GET /Z turns all the outputs off
+          digitalWrite(22, LOW);               // GET /Z turns all the outputs off
+          digitalWrite(15, LOW);               // GET /Z turns all the outputs off (Buzzer)
+        }
+        //Vibe on pin #2
+        if (currentLine.endsWith("GET /A")) {
+          digitalWrite(2, HIGH);               // GET /A turns the Far Right LED on/off slow
+          delay(500);
+          digitalWrite(2, LOW);
+          delay(1000);
+          digitalWrite(2, HIGH);
+          delay(500);
+          digitalWrite(2, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        
+        if (currentLine.endsWith("GET /B")) {
+          digitalWrite(2, HIGH);               // GET /B turns the Far Right LED on/off slow
+          delay(500);
+          digitalWrite(2, LOW);
+          delay(500);
+          digitalWrite(2, HIGH);
+          delay(500);
+          digitalWrite(2, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        
+        if (currentLine.endsWith("GET /C")) {
+          digitalWrite(2, HIGH);                // GET /C turns the Far Right LED on/off faster
+          delay(250);
+          digitalWrite(2, LOW);
+          delay(250);
+          digitalWrite(2, HIGH);
+          delay(250);
+          digitalWrite(2, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        
+        if (currentLine.endsWith("GET /D")) {
+          digitalWrite(2, HIGH);                // GET /D turns the Far Right LED on/off even faster
+          delay(125);
+          digitalWrite(2, LOW);
+          delay(125);
+          digitalWrite(2, HIGH);
+          delay(125);
+          digitalWrite(2, LOW);
+          delay(125);
+          digitalWrite(2, HIGH);
+          delay(125);
+          digitalWrite(2, LOW);
+          delay(125);
+          digitalWrite(2, HIGH);
+          delay(125);
+          digitalWrite(2, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        
+        if (currentLine.endsWith("GET /E")) {
+          digitalWrite(2, HIGH);                // GET /E turns the Far Right LED on/off extremely faster
+          delay(62);
+          digitalWrite(2, LOW);
+          delay(62);
+          digitalWrite(2, HIGH);
+          delay(62);
+          digitalWrite(2, LOW);
+          delay(62);
+          digitalWrite(2, HIGH);
+          delay(62);
+          digitalWrite(2, LOW);
+          delay(62);
+          digitalWrite(2, HIGH);
+          delay(62);
+          digitalWrite(2, LOW);
+          delay(62);
+          digitalWrite(2, HIGH);
+          delay(62);
+          digitalWrite(2, LOW);
+          delay(62);
+          digitalWrite(2, HIGH);
+          delay(62);
+          digitalWrite(2, LOW);
+          delay(62);
+          digitalWrite(2, HIGH);
+          delay(62);
+          digitalWrite(2, LOW);
+          delay(62);
+          digitalWrite(2, HIGH);
+          delay(62);
+          digitalWrite(2, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        
+        //Vibe on pin #5
+        if (currentLine.endsWith("GET /F")) {
+          digitalWrite(5, HIGH);               // GET /F turns the Near Right LED on/off really slow
+          delay(500);
+          digitalWrite(5, LOW);
+          delay(1000);
+          digitalWrite(5, HIGH);
+          delay(500);
+          digitalWrite(5, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+          
+        }
+        if (currentLine.endsWith("GET /G")) {
+          digitalWrite(5, HIGH);               // GET /G turns the Near Right LED on/off slow
+          delay(500);
+          digitalWrite(5, LOW);
+          delay(500);
+          digitalWrite(5, HIGH);
+          delay(500);
+          digitalWrite(5, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+          
+        }
+        
+        if (currentLine.endsWith("GET /H")) {
+          digitalWrite(5, HIGH);                // GET /H turns the Near Right LED on/off faster
+          delay(250);
+          digitalWrite(5, LOW);
+          delay(250);
+          digitalWrite(5, HIGH);
+          delay(250);
+          digitalWrite(5, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        if (currentLine.endsWith("GET /I")) {
+          digitalWrite(5, HIGH);                // GET /I turns the Near Right LED on/off even faster
+          delay(125);
+          digitalWrite(5, LOW);
+          delay(125);
+          digitalWrite(5, HIGH);
+          delay(125);
+          digitalWrite(5, LOW);
+          delay(125);
+          digitalWrite(5, HIGH);
+          delay(125);
+          digitalWrite(5, LOW);
+          delay(125);
+          digitalWrite(5, HIGH);
+          delay(125);
+          digitalWrite(5, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        if (currentLine.endsWith("GET /J")) {
+          digitalWrite(5, HIGH);                // GET /J turns the Near Right LED on/off extremely faster
+          delay(62);
+          digitalWrite(5, LOW);
+          delay(62);
+          digitalWrite(5, HIGH);
+          delay(62);
+          digitalWrite(5, LOW);
+          delay(62);
+          digitalWrite(5, HIGH);
+          delay(62);
+          digitalWrite(5, LOW);
+          delay(62);
+          digitalWrite(5, HIGH);
+          delay(62);
+          digitalWrite(5, LOW);
+          delay(62);
+          digitalWrite(5, HIGH);
+          delay(62);
+          digitalWrite(5, LOW);
+          delay(62);
+          digitalWrite(5, HIGH);
+          delay(62);
+          digitalWrite(5, LOW);
+          delay(62);
+          digitalWrite(5, HIGH);
+          delay(62);
+          digitalWrite(5, LOW);
+          delay(62);
+          digitalWrite(5, HIGH);
+          delay(62);
+          digitalWrite(5, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        //Vibe on pin #23
+        if (currentLine.endsWith("GET /K")) {
+          digitalWrite(23, HIGH);               // GET /K turns the Near Left LED on/off really slow
+          delay(500);
+          digitalWrite(23, LOW);
+          delay(1000);
+          digitalWrite(23, HIGH);
+          delay(500);
+          digitalWrite(23, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+          
+        }
+        if (currentLine.endsWith("GET /L")) {
+          digitalWrite(23, HIGH);               // GET /L turns the Near Left LED on/off slow
+          delay(500);
+          digitalWrite(23, LOW);
+          delay(500);
+          digitalWrite(23, HIGH);
+          delay(500);
+          digitalWrite(23, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+          
+        }
+
+        if (currentLine.endsWith("GET /M")) {
+          digitalWrite(23, HIGH);                // GET /M turns the Near Left LED on/off faster
+          delay(250);
+          digitalWrite(23, LOW);
+          delay(250);
+          digitalWrite(23, HIGH);
+          delay(250);
+          digitalWrite(23, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        if (currentLine.endsWith("GET /N")) {
+          digitalWrite(23, HIGH);                // GET /N turns the Near Left LED on/off even faster
+          delay(125);
+          digitalWrite(23, LOW);
+          delay(125);
+          digitalWrite(23, HIGH);
+          delay(125);
+          digitalWrite(23, LOW);
+          delay(125);
+          digitalWrite(23, HIGH);
+          delay(125);
+          digitalWrite(23, LOW);
+          delay(125);
+          digitalWrite(23, HIGH);
+          delay(125);
+          digitalWrite(23, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        if (currentLine.endsWith("GET /O")) {
+          digitalWrite(23, HIGH);                // GET /O turns the Near Left LED on/off extremely faster
+          delay(62);
+          digitalWrite(23, LOW);
+          delay(62);
+          digitalWrite(23, HIGH);
+          delay(62);
+          digitalWrite(23, LOW);
+          delay(62);
+          digitalWrite(23, HIGH);
+          delay(62);
+          digitalWrite(23, LOW);
+          delay(62);
+          digitalWrite(23, HIGH);
+          delay(62);
+          digitalWrite(23, LOW);
+          delay(62);
+          digitalWrite(23, HIGH);
+          delay(62);
+          digitalWrite(23, LOW);
+          delay(62);
+          digitalWrite(23, HIGH);
+          delay(62);
+          digitalWrite(23, LOW);
+          delay(62);
+          digitalWrite(23, HIGH);
+          delay(62);
+          digitalWrite(23, LOW);
+          delay(62);
+          digitalWrite(23, HIGH);
+          delay(62);
+          digitalWrite(23, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        //Vibe on pin #22
+        if (currentLine.endsWith("GET /P")) {
+          digitalWrite(22, HIGH);               // GET /P turns the Near Left LED on/off really slow
+          delay(500);
+          digitalWrite(22, LOW);
+          delay(1000);
+          digitalWrite(22, HIGH);
+          delay(500);
+          digitalWrite(22, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+          
+        }
+        if (currentLine.endsWith("GET /Q")) {
+          digitalWrite(22, HIGH);               // GET /Q turns the Near Left LED on/off slow
+          delay(500);
+          digitalWrite(22, LOW);
+          delay(500);
+          digitalWrite(22, HIGH);
+          delay(500);
+          digitalWrite(22, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+          
+        }
+        
+        if (currentLine.endsWith("GET /R")) {
+          digitalWrite(22, HIGH);                // GET /R turns the Near Left LED on/off faster
+          delay(250);
+          digitalWrite(22, LOW);
+          delay(250);
+          digitalWrite(22, HIGH);
+          delay(250);
+          digitalWrite(22, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        if (currentLine.endsWith("GET /S")) {
+          digitalWrite(22, HIGH);                // GET /S turns the Near Left LED on/off even faster
+          delay(125);
+          digitalWrite(22, LOW);
+          delay(125);
+          digitalWrite(22, HIGH);
+          delay(125);
+          digitalWrite(22, LOW);
+          delay(125);
+          digitalWrite(22, HIGH);
+          delay(125);
+          digitalWrite(22, LOW);
+          delay(125);
+          digitalWrite(22, HIGH);
+          delay(125);
+          digitalWrite(22, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+        if (currentLine.endsWith("GET /T")) {
+          digitalWrite(22, HIGH);                // GET /T turns the Near Left LED on/off extremely faster
+          delay(62);
+          digitalWrite(22, LOW);
+          delay(62);
+          digitalWrite(22, HIGH);
+          delay(62);
+          digitalWrite(22, LOW);
+          delay(62);
+          digitalWrite(22, HIGH);
+          delay(62);
+          digitalWrite(22, LOW);
+          delay(62);
+          digitalWrite(22, HIGH);
+          delay(62);
+          digitalWrite(22, LOW);
+          delay(62);
+          digitalWrite(22, HIGH);
+          delay(62);
+          digitalWrite(22, LOW);
+          delay(62);
+          digitalWrite(22, HIGH);
+          delay(62);
+          digitalWrite(22, LOW);
+          delay(62);
+          digitalWrite(22, HIGH);
+          delay(62);
+          digitalWrite(22, LOW);
+          delay(62);
+          digitalWrite(22, HIGH);
+          delay(62);
+          digitalWrite(22, LOW);
+          digitalWrite(15, HIGH);
+          delay(200);
+          digitalWrite(15, LOW);
+        }
+      }
+    }
+    // close the connection:
+    client.stop();
+    Serial.println("Client Disconnected.");
+  }
+}
